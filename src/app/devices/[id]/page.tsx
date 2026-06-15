@@ -8,7 +8,10 @@ import { formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/status-badge";
 import { MovementTimeline } from "@/components/movement-timeline";
 import { DeleteDeviceButton } from "@/components/delete-device-button";
+import { ImageUploader } from "@/components/image-uploader";
+import { ImageGallery } from "@/components/image-gallery";
 import { deleteDevice } from "@/lib/devices/actions";
+import { uploadDeviceImages } from "@/lib/images/actions";
 
 export const metadata: Metadata = { title: "Device · Cybernet Stock Tracker" };
 
@@ -102,32 +105,17 @@ export default async function DeviceDetailPage({
         )}
       </section>
 
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-carbon">Images</h2>
-        {device.images.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border bg-surface p-6 text-center text-sm text-muted">
-            No images yet.
-          </p>
-        ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {device.images.map((img) => (
-              <li
-                key={img.id}
-                className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/images/${img.id}`}
-                  alt={img.caption ?? `${device.make} ${device.model}`}
-                  className="aspect-square w-full object-cover"
-                />
-                {img.caption && (
-                  <p className="px-2 py-1 text-xs text-muted">{img.caption}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-carbon">Images</h2>
+        <ImageUploader action={uploadDeviceImages.bind(null, device.id)} />
+        <ImageGallery
+          alt={`${device.make} ${device.model}`}
+          images={device.images.map((img) => ({
+            id: img.id,
+            caption: img.caption,
+            uploadedByName: img.uploadedBy?.name ?? null,
+          }))}
+        />
       </section>
 
       <section>
