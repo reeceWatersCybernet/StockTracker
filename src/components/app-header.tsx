@@ -27,6 +27,9 @@ export async function AppHeader() {
             <Link href="/devices" className="hover:text-brand">
               Devices
             </Link>
+            <Link href="/customers" className="hover:text-brand">
+              Customers
+            </Link>
           </nav>
         </div>
 
