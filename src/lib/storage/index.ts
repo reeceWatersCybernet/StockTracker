@@ -51,7 +51,16 @@ export function mimeForKey(key: string): string {
   return EXT_TO_MIME[ext] ?? "application/octet-stream";
 }
 
+/**
+ * The single image-size knob, in megabytes (MAX_UPLOAD_MB, default 15). The
+ * Server Actions request-body limit in next.config.ts is derived from this same
+ * value, so there is only one number to change.
+ */
+export function maxUploadMb(): number {
+  const value = Number(process.env.MAX_UPLOAD_MB);
+  return Number.isFinite(value) && value > 0 ? value : 15;
+}
+
 export function maxUploadBytes(): number {
-  const value = Number(process.env.MAX_UPLOAD_BYTES);
-  return Number.isFinite(value) && value > 0 ? value : 15 * 1024 * 1024;
+  return Math.round(maxUploadMb() * 1024 * 1024);
 }

@@ -74,7 +74,7 @@ See [`.env.example`](./.env.example) for the full list. Key ones:
 | `AUTH_STUB_ENABLED` | `true` in v0.1 (no-password user switcher) |
 | `STORAGE_DRIVER` | `local` for now (filesystem); `minio` later |
 | `UPLOAD_DIR` | Where the local driver writes images (outside the web root) |
-| `MAX_UPLOAD_BYTES` | Image size cap (default 10 MB) |
+| `MAX_UPLOAD_MB` | Max image size in MB (default 15). The upload request-body limit is derived from this. |
 
 Secrets never go in the repo. `.env` is git-ignored; only `.env.example` is
 committed.
