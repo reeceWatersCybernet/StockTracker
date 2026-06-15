@@ -53,5 +53,5 @@ export function mimeForKey(key: string): string {
 
 export function maxUploadBytes(): number {
   const value = Number(process.env.MAX_UPLOAD_BYTES);
-  return Number.isFinite(value) && value > 0 ? value : 10 * 1024 * 1024;
+  return Number.isFinite(value) && value > 0 ? value : 15 * 1024 * 1024;
 }
