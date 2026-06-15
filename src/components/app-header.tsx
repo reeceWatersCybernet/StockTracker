@@ -24,6 +24,9 @@ export async function AppHeader() {
             Stock Tracker
           </Link>
           <nav className="hidden items-center gap-4 text-sm font-medium text-muted sm:flex">
+            <Link href="/" className="hover:text-brand">
+              Dashboard
+            </Link>
             <Link href="/devices" className="hover:text-brand">
               Devices
             </Link>
