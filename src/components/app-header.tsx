@@ -18,10 +18,17 @@ export async function AppHeader() {
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-surface/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4">
-        <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-carbon">
-          <span className="inline-block h-3 w-3 rounded-sm bg-brand" aria-hidden />
-          Stock Tracker
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-carbon">
+            <span className="inline-block h-3 w-3 rounded-sm bg-brand" aria-hidden />
+            Stock Tracker
+          </Link>
+          <nav className="hidden items-center gap-4 text-sm font-medium text-muted sm:flex">
+            <Link href="/devices" className="hover:text-brand">
+              Devices
+            </Link>
+          </nav>
+        </div>
 
         {current ? (
           <UserSwitcher
