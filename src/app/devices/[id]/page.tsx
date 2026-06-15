@@ -10,6 +10,7 @@ import { MovementTimeline } from "@/components/movement-timeline";
 import { DeleteDeviceButton } from "@/components/delete-device-button";
 import { ImageUploader } from "@/components/image-uploader";
 import { ImageGallery } from "@/components/image-gallery";
+import { MovementActions } from "@/components/movement-actions";
 import { deleteDevice } from "@/lib/devices/actions";
 import { uploadDeviceImages } from "@/lib/images/actions";
 
@@ -22,26 +23,34 @@ export default async function DeviceDetailPage({
 }) {
   const { id } = await params;
 
-  const device = await prisma.device.findUnique({
-    where: { id },
-    include: {
-      movements: {
-        orderBy: [{ isCurrent: "desc" }, { createdAt: "desc" }],
-        include: {
-          customer: { select: { name: true, shortCode: true } },
-          createdBy: { select: { name: true } },
+  const [device, customers] = await Promise.all([
+    prisma.device.findUnique({
+      where: { id },
+      include: {
+        movements: {
+          orderBy: [{ isCurrent: "desc" }, { createdAt: "desc" }],
+          include: {
+            customer: { select: { name: true, shortCode: true } },
+            createdBy: { select: { name: true } },
+          },
+        },
+        images: {
+          orderBy: { uploadedAt: "desc" },
+          include: { uploadedBy: { select: { name: true } } },
         },
       },
-      images: {
-        orderBy: { uploadedAt: "desc" },
-        include: { uploadedBy: { select: { name: true } } },
-      },
-    },
-  });
+    }),
+    prisma.customer.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   if (!device) notFound();
 
   const current = device.movements.find((m) => m.isCurrent) ?? null;
+  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6">
@@ -103,6 +112,16 @@ export default async function DeviceDetailPage({
             </p>
           </div>
         )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-carbon">Actions</h2>
+        <MovementActions
+          deviceId={device.id}
+          status={device.status}
+          customers={customers}
+          today={today}
+        />
       </section>
 
       <section className="space-y-3">
