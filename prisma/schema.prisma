@@ -1,0 +1,158 @@
+// Cybernet Stock Tracker — Prisma schema
+//
+// The User table and every createdByUser / uploadedByUser foreign key are present
+// from the very start. Authentication is a stub in v0.1 (a no-password user
+// switcher) and becomes Entra ID SSO in v1 — but because the User model and its
+// relations already exist, that is a provider swap, not a data-model change.
+//
+// Datasource URL is supplied via prisma.config.ts (CLI) and the DATABASE_URL
+// environment variable (runtime). See prisma.config.ts and .env.example.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum DeviceType {
+  Laptop
+  Desktop
+  Server
+  Monitor
+  Switch
+  Router
+  Firewall
+  AccessPoint
+  Printer
+  VoIPPhone
+  MobileDevice
+  Dock
+  Peripheral
+  Other
+}
+
+enum DeviceStatus {
+  InStock
+  Deployed
+  AwaitingCollection
+  InRepair
+  Retired
+}
+
+enum LocationType {
+  Office
+  Customer
+}
+
+enum UserRole {
+  Admin
+  Engineer
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+/// A member of the team. In v0.1 users are seeded and selected via a no-password
+/// switcher; in v1 they are provisioned by Entra ID SSO. Extension point for v1:
+/// add an `entraObjectId String? @unique` field for the SSO subject claim.
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      UserRole @default(Engineer)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Audit-trail relations — kept from the start so v1 auth is a swap, not a migration.
+  movementsCreated Movement[]    @relation("MovementCreatedBy")
+  imagesUploaded   DeviceImage[] @relation("ImageUploadedBy")
+}
+
+/// The physical item of stock. Its *current* location lives on the latest
+/// Movement where isCurrent = true; `status` is kept in sync on the device for
+/// fast filtering.
+model Device {
+  id           String       @id @default(cuid())
+  assetTag     String?      @unique // our internal reference — optional, unique when present
+  serialNumber String?
+  make         String
+  model        String
+  type         DeviceType
+  status       DeviceStatus @default(InStock)
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  images    DeviceImage[]
+  movements Movement[]
+
+  @@index([serialNumber])
+  @@index([status])
+  @@index([type])
+}
+
+/// A photograph or scan of a device. Files live outside the web root; only the
+/// path is stored here (see the storage interface in src/lib/storage).
+model DeviceImage {
+  id               String   @id @default(cuid())
+  deviceId         String
+  filePath         String
+  caption          String?
+  uploadedAt       DateTime @default(now())
+  uploadedByUserId String
+
+  device     Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  uploadedBy User   @relation("ImageUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([deviceId])
+  @@index([uploadedByUserId])
+}
+
+/// A customer we deploy kit to. Simple manual list for v1. Extension point:
+/// sync from the Autotask API later (add an `autotaskId` and a sync timestamp).
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  shortCode String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movements Movement[]
+}
+
+/// The audit trail — the heart of the app. Every time a device moves we add a
+/// record; we never overwrite history. Exactly one movement per device has
+/// isCurrent = true (enforced in application logic within a transaction).
+model Movement {
+  id                     String       @id @default(cuid())
+  deviceId               String
+  locationType           LocationType
+  customerId             String? // required when locationType = Customer (enforced in app logic)
+  officeSubLocation      String? // e.g. "Shelf B", "Goods-in"
+  reason                 String
+  ticketNumber           String? // free text in v1; validated against Autotask later
+  installDate            DateTime
+  proposedCollectionDate DateTime?
+  actualCollectionDate   DateTime? // set when the device is collected / returns
+  isCurrent              Boolean      @default(true)
+  createdAt              DateTime     @default(now())
+  createdByUserId        String
+
+  device    Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  customer  Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  createdBy User      @relation("MovementCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([deviceId, isCurrent])
+  @@index([customerId])
+  @@index([createdByUserId])
+  @@index([proposedCollectionDate])
+}

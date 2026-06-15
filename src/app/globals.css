@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/*
+ * Cybernet brand foundations — kept light and functional.
+ *  - Carbon #101010, Silver #EFEFEF, White #FFFFFF
+ *  - One expression colour throughout this app: Blue #0084FF
+ *    (primary actions, links, active states). No other expression colours.
+ *
+ * Defining these under @theme generates Tailwind utilities, e.g.
+ *   bg-brand, text-brand, bg-carbon, bg-silver, ring-brand, border-brand.
+ */
+@theme {
+  --color-carbon: #101010;
+  --color-silver: #efefef;
+  --color-white: #ffffff;
+
+  --color-brand: #0084ff;
+  --color-brand-dark: #006fd6; /* hover / active */
+
+  /* Semantic tokens used across the app shell */
+  --color-background: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-foreground: #101010;
+  --color-muted: #5b5f66;
+  --color-border: #e3e4e7;
+
+  /* TASA Orbiter (when the font files are added) with Inter as the fallback.
+     See public/fonts/README.md to enable TASA Orbiter. */
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  background: var(--color-background);
+}
+
+body {
+  color: var(--color-foreground);
+}
